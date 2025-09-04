@@ -5,7 +5,10 @@ import axios from 'axios';
 
 export default function App(){
   return(
+    <div style={{display:"flex",marginTop:"30px"}}>
     <Form />
+    <Userlist />
+    </div>
   );
 }
 
@@ -35,8 +38,7 @@ function Form(){
     try{
       const response = await axios.post('http://127.0.0.1:8000/emp',formData)
       console.log("Response from server :", response.data);
-      alert(response.data.email);
-      alert('User data submitted successfully');
+      alert(`Hello ${response.data.name}, data submitted successfully!`);
       setFormData({emp_id:'',name:'',dept:'',email:'',password:''});
     }
     catch(error){
@@ -46,8 +48,8 @@ function Form(){
 
   }
   return(
-    <div style={{justifyContent:"center",display:"flex",marginTop:"130px"}}>
-      <div style={{}}>
+    // <div style={{}}>
+      <div style={{marginLeft:"100px"}}>
         <form onSubmit={handleSubmit}>
             <h2 style={{marginLeft:"12px"}}>Enter User Data</h2>
 
@@ -113,7 +115,81 @@ function Form(){
           </button>
         </form>
       </div>
+    // </div>
+  );
+}
+
+function Userlist() {
+  const [users, setUsers] = useState([]);
+
+  const userData = async() => {
+    try{
+      const response = await axios.get("http://127.0.0.1:8000/emp");
+      setUsers(response.data);
+      console.log(response.data);
+    }catch(error){
+      alert('error fetching users data')
+    }
+  }
+
+  const deleteUser = async (emp_id) => {
+    try {
+      const id = parseInt(emp_id, 10);
+      await axios.delete(`http://127.0.0.1:8000/emp/${(id)}`);
+      alert(`Employee ${emp_id} deleted successfully`);
+      setUsers(users.filter((u) => u.emp_id !== emp_id)); // updates UI
+    } catch (error) {
+      alert("Failed to delete user");
+    }
+  };
+
+  return (
+    <div style={{ marginLeft: "170px", marginTop:"30px" }}>
+      <button onClick={userData} className="submit-btn">
+        Get Users
+      </button>
+
+      {users.length === 0 ? ('') : 
+      (
+        <table border="1" cellPadding="10" style={{ borderCollapse: "collapse", marginTop: "20px" }}>
+          <thead>
+            <tr>
+              <th>Emp ID</th>
+              <th>Name</th>
+              <th>Department</th>
+              <th>Email</th>
+              <th>Update</th>
+              <th>Delete</th>
+            </tr>
+          </thead>
+          
+          <tbody>
+              {
+                users.map((user) => (
+                  <UserComp key={user.emp_id} user={user} onDelete={deleteUser}/>
+                ))
+              }
+          </tbody>
+        </table>
+      )}
     </div>
+  );
+}
+
+function UserComp({ user, onDelete }) {
+  return (
+    <tr>
+      <td>{user.emp_id}</td>
+      <td>{user.name}</td>
+      <td>{user.dept}</td>
+      <td>{user.email}</td>
+      <td>
+        <button className="update-btn" >Update</button>
+      </td>
+      <td>
+        <button className="delete-btn" onClick={() => onDelete((user.emp_id))}>Delete</button>
+      </td>
+    </tr>
   );
 }
 
