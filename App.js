@@ -153,7 +153,7 @@ function Userlist() {
     try {
       // const id = parseInt(emp_id, 10);
       await axios.delete(`http://127.0.0.1:8000/emp/${emp_id}`);
-      alert(`Employee ${emp_id} deleted successfully`);
+      alert(`Employee with EmpID : ${emp_id} deleted successfully`);
       setUsers(users.filter((u) => u.emp_id !== emp_id)); // updating state after deletion which intern disappear on the UI
     } catch (error) {
       alert("Failed to delete user");
@@ -166,7 +166,7 @@ function Userlist() {
   }
 
   return (
-    <div style={{ display:"flex", flexDirection:"column",alignItems:"center",width:"1000px" }}>
+    <div style={{ display:"flex", flexDirection:"column",alignItems:"center",width:"1000px",marginTop:"35px" }}>
 
       <button onClick={userData} className="submit-btn">
         Get Users
@@ -206,14 +206,14 @@ function Userlist() {
       {editingUser && (
         <div style={{display:"flex", flexDirection:"column",alignItems:"center"}}>
           <br></br>
-          <h3 style={{color:"gray"}}>Update Employee</h3>
+          <h3 style={{color:"gray"}}>Updating Employee with ID : {editingUser.emp_id}</h3>
           <form
             onSubmit={async (e) => {
               e.preventDefault();
               try{
                 const response = await axios.put(`http://127.0.0.1:8000/emp/${editingUser.emp_id}`,editingUser);
                 console.log(response.status);
-              alert('Employee data updated successfully');
+                alert('Employee data updated successfully');
 
               // updating the users state object so that it reflect on the UI
               setUsers(users.map((u) => u.emp_id === editingUser.emp_id ? editingUser : u));
@@ -221,8 +221,11 @@ function Userlist() {
               // Closing the edit form by setting editingUser back to null
               setEditingUser(null);
               }catch(error){
-
-                alert('Falied to update user data')
+                if(error.response.status === 401){
+                  alert("Unauthorized access")
+                }else{
+                  alert('Falied to update user data')
+                }
               }
             
             }}
@@ -285,4 +288,3 @@ function UserComp({ user, onDelete, onEdit }) {
     </tr>
   );
 }
-
