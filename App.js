@@ -193,13 +193,8 @@ function Userlist() {
       await axios.delete(`http://127.0.0.1:8000/emp/${emp_id}`);
       toast.success(`Employee with EmpID : ${emp_id} deleted successfully`);
 
-      // Here we can use either of the below lines to get updated data to UI 
-
-      //  1.By itterating through all the user data using filter function and removing the matching one.
-            //  setUsers(users.filter((u) => u.emp_id !== emp_id));
-
-      //  2. calling the GET method and update the state object which intern reflect on the UI.
-              userData();
+      //  By itterating through all the user data using filter function and removing the matching one.
+             setUsers(users.filter((u) => u.emp_id !== emp_id));
 
     } catch (error) {
       toast.error("Failed to delete user");
