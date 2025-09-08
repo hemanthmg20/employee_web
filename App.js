@@ -2,18 +2,25 @@ import { useState } from "react";
 import './App.css';
 import axios from 'axios';
 
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
+
 
 export default function App(){
   return(
     <div style={{display:"flex",marginTop:"30px"}}>
     <Form />
     <Userlist />
+    <ToastContainer position="top-left" autoClose={3000} hideProgressBar={false} />
     </div>
   );
 }
 
 
 function Form(){
+
+  // State to store the data from the form input fields 
   const [formData, setFormData] = useState(
     {
       emp_id:'',
@@ -24,33 +31,62 @@ function Form(){
     }
   );
 
+  // State to store error messages in the each fields
+  const [errors, setErrors] = useState({})
+
+  const regexRules = {
+    emp_id : {regex : /^[0-9]+$/, msg : "Employee ID must contain only numbers" },
+    name : {regex : /^[A-Za-z\s]{3,30}$/, msg : "Name must be 3–30 letters without digits and special charecters"},
+    dept : {regex : /^[A-Za-z\s]{2,20}$/, msg : "Department must be 2-20 letters without digits and special charecters"},
+    password : {regex: /^[A-Za-z0-9]{8,20}$/, msg : "Password must be 8–20 chars, with at least 1 uppercase,lowercase and a digit"}
+  }
+
   // Handling input change
   const handleChange = (e) => {
-    setFormData({...formData, [e.target.name] : e.target.value }); 
-    // [e.target.name] is a computed property syntax. JS will evaluate this expression and use its result as a key
+    // [e.target.name] is a computed property syntax. JS will evaluate this expression and use its result as a key.
+    // setFormData({...formData, [e.target.name] : e.target.value }); 
+
+    // Destructuring the input field name and its value 
+    const { name, value } = e.target;
+
+    setFormData({...formData,[name] : value});
+
+    // validating the input values
+    if (regexRules[name] && !regexRules[name].regex.test(value)) {
+      setErrors({ ...errors,[name] : regexRules[name].msg});
+    }else{
+      // Instead of modifing the object (errors) directly [react warns for direct modificaton] we create a copy, modify it and then assign through setErrors 
+      const newerrors = {...errors}; // shallow copy 
+      delete newerrors[name];
+      // modify a copy (newErrors) 
+      setErrors(newerrors);
+    }
+
   };
 
   // Handling form submit
   const handleSubmit = async (e) => {
+    // debugger
     e.preventDefault()
     // alert('form submitted');
     console.log(formData);
 
-    try{
-      const response = await axios.post('http://127.0.0.1:8000/emp',formData)
-      console.log("Response from server :", response.data);
-      alert(`Hello ${response.data.name}, data submitted successfully!`);
-      setFormData({emp_id:'',name:'',dept:'',email:'',password:''});
-    }
-    catch(error){
-      console.error('error in form submission',error);
-      alert('failed to submit form');
+    try {
+    const response = await axios.post('http://127.0.0.1:8000/emp', formData);
+    console.log("Response from server :", response.data);
+    
+    toast.success(`Hello ${response.data.name}, data submitted successfully!`);
+    setFormData({emp_id:'',name:'',dept:'',email:'',password:''});
+
+    } catch (error) {
+    console.error('error in form submission', error);
+    toast.error('Failed to submit form');
     }
 
   }
   return(
     // <div style={{}}>
-      <div style={{marginLeft:"100px"}}>
+      <div style={{marginLeft:"100px", width:"250px"}}>
         <form onSubmit={handleSubmit}>
             <h2 style={{marginLeft:"12px"}}>Enter User Data</h2>
 
@@ -62,7 +98,8 @@ function Form(){
               name="emp_id"
               value={formData.emp_id}
               required
-            /><br></br>
+            />
+            { errors.emp_id && <p style={{color:"red", fontSize:"12px"}}>{errors.emp_id}</p>}
 
             <input
               type="text"
@@ -72,9 +109,9 @@ function Form(){
               name="name"
               value={formData.name}
               required
-            />
+              />
+              {errors.name && <p style={{color:"red", fontSize:"12px"}}>{errors.name}</p>}
 
-            <br></br>
             <input
             type="text"
             placeholder="Department"
@@ -84,6 +121,7 @@ function Form(){
             value={formData.dept}
             required
             />
+            {errors.dept && <p style={{color:"red", fontSize:"12px"}}>{errors.dept}</p>}
 
             <br></br>
             <input
@@ -106,8 +144,8 @@ function Form(){
             value={formData.password}
             required
             />
+            {errors.password && <p style={{color:"red", fontSize:"12px"}}>{errors.password}</p>}
 
-            <br></br>
             <button
             type="submit"
             className="submit-btn"
@@ -153,10 +191,18 @@ function Userlist() {
     try {
       // const id = parseInt(emp_id, 10);
       await axios.delete(`http://127.0.0.1:8000/emp/${emp_id}`);
-      alert(`Employee with EmpID : ${emp_id} deleted successfully`);
-      setUsers(users.filter((u) => u.emp_id !== emp_id)); // updating state after deletion which intern disappear on the UI
+      toast.success(`Employee with EmpID : ${emp_id} deleted successfully`);
+
+      // Here we can use either of the below lines to get updated data to UI 
+
+      //  1.By itterating through all the user data using filter function and removing the matching one.
+            //  setUsers(users.filter((u) => u.emp_id !== emp_id));
+
+      //  2. calling the GET method and update the state object which intern reflect on the UI.
+              userData();
+
     } catch (error) {
-      alert("Failed to delete user");
+      toast.error("Failed to delete user");
     }
   };
 
@@ -168,16 +214,16 @@ function Userlist() {
   return (
     <div style={{ display:"flex", flexDirection:"column",alignItems:"center",width:"1000px",marginTop:"35px" }}>
 
+      {users.length === 0 && <p>Please click <strong>Get Users</strong> to fetch data</p>}
       <button onClick={userData} className="submit-btn">
         Get Users
       </button>
 
-      {errorResponse === true ? (
-        <p>No Employees found!</p>
-        ): ('')
+      {errorResponse === true && 
+        <p style={{color:"red"}}>No employees found!</p>
       }
 
-      {users.length === 0  ? ('') : 
+      {users.length !== 0  && 
       (
         <table border="1" cellPadding="10" style={{ borderCollapse: "collapse", marginTop: "20px" }}>
           <thead>
@@ -213,18 +259,24 @@ function Userlist() {
               try{
                 const response = await axios.put(`http://127.0.0.1:8000/emp/${editingUser.emp_id}`,editingUser);
                 console.log(response.status);
-                alert('Employee data updated successfully');
+                toast.success('Employee data updated successfully');
+              
+              // Here we can use either of the below lines to get updated data to UI 
 
-              // updating the users state object so that it reflect on the UI
-              setUsers(users.map((u) => u.emp_id === editingUser.emp_id ? editingUser : u));
+              // 1. updating the users state object by itterating through map function and update the matching one.
+                     // setUsers(users.map((u) => u.emp_id === editingUser.emp_id ? editingUser : u));
+
+              //  2. calling userData() to fetch the entire data from the database so that it reflect on the UI 
+                      userData();
 
               // Closing the edit form by setting editingUser back to null
               setEditingUser(null);
+
               }catch(error){
                 if(error.response.status === 401){
-                  alert("Unauthorized access")
+                  toast.error("Unauthorized access")
                 }else{
-                  alert('Falied to update user data')
+                  toast.error('Falied to update user data')
                 }
               }
             
@@ -239,6 +291,7 @@ function Userlist() {
               }
               placeholder="Name"
               className="input-field"
+              required
             /><br></br>
 
             <input 
@@ -249,6 +302,7 @@ function Userlist() {
               }
               placeholder="Department"
               className="input-field"
+              required
             /><br></br>
 
             <input
@@ -259,6 +313,7 @@ function Userlist() {
               }
               placeholder="Email"
               className="input-field"
+              required
             /><br></br>
 
             <button
