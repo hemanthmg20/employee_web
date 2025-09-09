@@ -15,17 +15,26 @@
   margin-left: 55px;
   border: none;
   cursor: pointer;
-  padding: 8px 20px;
+  padding: 8px 10px;
   border-radius: 5px;
 }
+.get-users{
+  background-color: lightgreen;
+  /* margin-left: 55px; */
+  border: none;
+  cursor: pointer;
+  padding: 8px 10px;
+  border-radius: 5px;
+
+}
 .update-btn{
-  background-color: lightblue;
+  background-color: #add8e6;
   border: none;
   cursor: pointer;
   border-radius: 5px;
 }
 .delete-btn{
-  background-color: red;
+  background-color: #ff0000;
   color: white;
   border: none;
   cursor: pointer;
