@@ -9,11 +9,15 @@ import 'react-toastify/dist/ReactToastify.css';
 
 export default function App(){
   return(
-    <div style={{display:"flex",marginTop:"30px"}}>
+    <>
+    <h2 style={{display:"flex", justifyContent:"center"}}>EMPLOYEE CRUD OPERATIONS</h2>
+    <div style={{display:"flex",marginTop:"45px", justifyContent:"space-between"}}>
     <Form />
     <Userlist />
+    <Updatepasskey />
     <ToastContainer position="top-left" autoClose={3000} hideProgressBar={false} />
     </div>
+    </>
   );
 }
 
@@ -86,7 +90,7 @@ function Form(){
   }
   return(
     // <div style={{}}>
-      <div style={{marginLeft:"100px", width:"250px"}}>
+      <div style={{marginLeft:"50px", width:"200px"}}>
         <form onSubmit={handleSubmit}>
             <h2 style={{marginLeft:"12px"}}>Enter User Data</h2>
 
@@ -191,7 +195,7 @@ function Userlist() {
     try {
       // const id = parseInt(emp_id, 10);
       await axios.delete(`http://127.0.0.1:8000/emp/${emp_id}`);
-      toast.success(`Employee with EmpID : ${emp_id} deleted successfully`);
+      toast.success(`Employee with EmpID:${emp_id} deleted successfully`);
 
       //  By itterating through all the user data using filter function and removing the matching one.
              setUsers(users.filter((u) => u.emp_id !== emp_id));
@@ -207,10 +211,11 @@ function Userlist() {
   }
 
   return (
-    <div style={{ display:"flex", flexDirection:"column",alignItems:"center",width:"1000px",marginTop:"35px" }}>
+    <div style={{ display:"flex", flexDirection:"column",alignItems:"center",width:"450px",marginTop:"15px" }}>
 
-      {users.length === 0 && <p>Please click <strong>Get Users</strong> to fetch data</p>}
-      <button onClick={userData} className="submit-btn">
+      {/* {users.length === 0 && <p>Please click <strong>Get Users</strong> to fetch data</p>} */}
+      <p>Please click <strong>Get Users</strong> to fetch data</p>
+      <button onClick={userData} className="get-users">
         Get Users
       </button>
 
@@ -337,4 +342,160 @@ function UserComp({ user, onDelete, onEdit }) {
       </td>
     </tr>
   );
+}
+
+function Updatepasskey() {
+  // state to verify current password
+  const [verifyPassword, setVerifypassword] = useState(
+    {
+      emp_id : "",
+      email : "",
+      password : ""
+    }
+  )
+
+  // state to check the type of error
+  const [error, setError] = useState("")
+
+  // state to set newpassword
+  const [newPasscode, setNewPasscode] = useState(
+    {
+      new_password : "",
+      confirm_new_password : ""
+    }
+  )
+
+  const onUpdate = (e) => {
+    setVerifypassword({...verifyPassword,[e.target.name] : e.target.value});
+  }
+
+  const handleSubmit = async(e) => {
+    e.preventDefault();
+    console.log(verifyPassword);
+    try{
+      const response = await axios.post(`http://127.0.0.1:8000/emp/verify`,verifyPassword);
+      // console.log(response);
+      console.log(response.status);
+      setError("false");
+    }
+    catch(error){
+      if (error.response.status === 401){
+        console.log("email or password mismatch");
+        setError("401")
+      }if(error.response.status === 404){
+        console.log("No data found for this empid");
+        setError("404")
+      }else{
+        console.log(error);
+      }
+    }
+    
+  }
+
+  return(
+        <div style={{display:"flex", flexDirection:"column",alignItems:"center", width:"250px"}}>
+          
+          <form onSubmit={handleSubmit}>
+            <h2>Update password</h2>
+
+            <input
+              type="text"
+              name="emp_id"
+              placeholder="Employee ID"
+              className="input-field"
+              value={verifyPassword.emp_id}
+              onChange={onUpdate}
+              required
+            />
+
+            <input
+              type="email"
+              name="email"
+              placeholder="Email"
+              className="input-field"
+              value={verifyPassword.email}
+              onChange={onUpdate}
+              required
+            />
+
+            <input 
+              type="password"  
+              name="password"
+              placeholder="current password"
+              value={verifyPassword.password}
+              className="input-field"
+              onChange={onUpdate}
+              required
+            />
+
+            <button className="submit-btn">Proceed...</button>
+
+          </form>
+          
+          {error === "404" && (<p style={{color:"red"}}>No data found for this empid</p>)}
+          {error === "401" && (<p style={{color:"red"}}>Credentials mismatch</p>)}
+
+          {error === "false" && (
+            <div style={{display:"flex", flexDirection:"column",alignItems:"center"}}>
+
+              <form onSubmit={
+                async (e) =>  {
+                  e.preventDefault();
+                  
+                  try{
+                      // if(verifyPassword.password === newPasscode.new_password){
+                      //   setError("old === new");
+                      // }
+                      // if (newPasscode.new_password !== newPasscode.confirm_new_password){
+                      //   setError("passwords mismatch");
+                      // }
+                      await axios.put(`http://127.0.0.1:8000/emp/reset/${Number(verifyPassword.emp_id)}`,newPasscode);
+                      setError("");
+                      setVerifypassword({emp_id : "",email : "",password : ""});
+                      toast.success('Password reset successfull!');
+
+                    }catch(error){
+                      toast.error("failed to update password")
+                    }
+
+                }
+              }>
+                <p style={{color:"green"}}>Good to go!</p>
+
+                <input 
+                  type="password"
+                  name="new_password"
+                  placeholder="new password"
+                  className="input-field"
+                  value={newPasscode.new_password}
+                  onChange={(e) => {
+                    setNewPasscode({...newPasscode,new_password : e.target.value})
+                  }}
+                  required
+                />
+
+                {(verifyPassword.password === newPasscode.new_password) && (<p style={{color:"red"}}>your new password can't be same as old one</p>) }
+
+
+                <input 
+                  type="password"
+                  name="confirm_new_password"
+                  placeholder="confirm new password"
+                  className="input-field"
+                  value={newPasscode.confirm_new_password}
+                  onChange={(e) => {
+                    setNewPasscode({...newPasscode,confirm_new_password : e.target.value});
+                  }}
+                  required
+                />
+
+                {(newPasscode.new_password !== newPasscode.confirm_new_password) ? (<p style={{color:"red"}}>Passwords mismatch</p>) : (<p style={{color:"green"}}>Passwords match</p>)}
+
+                <button className="submit-btn">Change password</button>
+              </form>
+            </div>
+          )}
+        </div>
+      )
+
 }
