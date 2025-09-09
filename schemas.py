@@ -14,8 +14,8 @@ class PasswordValidator(BaseModel):
             raise ValueError("Password must contain at least one lowercase letter") 
         if not re.search(r"[0-9]", v):
             raise ValueError("Password must contain at least one digit")
-        if not re.search(r"[!@#$%^&*(),.?\":{}|<>]", v):
-            raise ValueError("Password must contain at least one special character")
+        # if not re.search(r"[!@#$%^&*(),.?\":{}|<>]", v):
+        #     raise ValueError("Password must contain at least one special character")
         return v
 
 class emp_schema(PasswordValidator):
@@ -38,6 +38,7 @@ class emp_schema(PasswordValidator):
     
 
 class emp_resopnse(BaseModel):
+    emp_id : int
     name : str
     dept : str
     email : str
@@ -47,9 +48,11 @@ class emp_resopnse(BaseModel):
 
         
 class ResetPasswordRequest(BaseModel):
-    email: EmailStr
-    current_password: str
+    # email: EmailStr
+    # current_password: str
+    
     new_password: Annotated[str, StringConstraints(min_length=8)]
+    confirm_new_password : str
 
     @field_validator("new_password")
     def validate_password_strength(cls, v):
@@ -95,6 +98,10 @@ class emp_put_schema(BaseModel):
             raise ValueError("Name must contain only letters and spaces")
         return v
 
+class emp_verify_schema(BaseModel):
+    emp_id : str
+    email : str
+    password : str
 
 class emp_delete_schema(BaseModel):
     email : str
