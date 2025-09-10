@@ -386,7 +386,7 @@ function Updatepasskey() {
         console.log("No data found for this empid");
         setError("404")
       }else{
-        console.log(error);
+        toast.error("Server not reacheble");
       }
     }
     
@@ -452,6 +452,7 @@ function Updatepasskey() {
                       await axios.put(`http://127.0.0.1:8000/emp/reset/${Number(verifyPassword.emp_id)}`,newPasscode);
                       setError("");
                       setVerifypassword({emp_id : "",email : "",password : ""});
+                      setNewPasscode({new_password : "",confirm_new_password : ""});
                       toast.success('Password reset successfull!');
 
                     }catch(error){
@@ -474,9 +475,9 @@ function Updatepasskey() {
                   required
                 />
 
-                {(verifyPassword.password === newPasscode.new_password) && (<p style={{color:"red"}}>your new password can't be same as old one</p>) }
+                {(verifyPassword.password === newPasscode.new_password) && (<span style={{color:"red", fontSize:"12px"}}>your new password can't be same as old one</span>) }
 
-
+                
                 <input 
                   type="password"
                   name="confirm_new_password"
@@ -489,9 +490,18 @@ function Updatepasskey() {
                   required
                 />
 
-                {(newPasscode.new_password !== newPasscode.confirm_new_password) ? (<p style={{color:"red"}}>Passwords mismatch</p>) : (<p style={{color:"green"}}>Passwords match</p>)}
+                {(newPasscode.new_password) &&
+                  (newPasscode.confirm_new_password) && 
+                  (newPasscode.new_password !== newPasscode.confirm_new_password) && 
+                  (<span style={{color:"red", fontSize:"12px"}}>Passwords mismatch</span>)
+                }
 
-                <button className="submit-btn">Change password</button>
+                <button
+                 className="submit-btn"
+                 disabled={
+                  verifyPassword.password === newPasscode.new_password || newPasscode.new_password !== newPasscode.confirm_new_password
+                 }
+                 >Change password</button>
               </form>
             </div>
           )}
